@@ -8,7 +8,7 @@ export const register = async (req,res) =>{
     const {name,email,password} = req.body;
     if(!name || !email || !password)
     {
-        return res.json({sucess:false, message: "Missing Details"});
+        return res.json({success:false, message: "Missing Details"});
     }
     try{
         const existingUser = await userModel.findOne({email});
@@ -48,7 +48,7 @@ export const register = async (req,res) =>{
     }
     catch(error)
     {
-        res.json({sucess:false, message:error.message});
+        res.json({success:false, message:error.message});
     }
 }
 
@@ -111,3 +111,93 @@ export const logout = async (req,res) =>{
 }
 
 // Now create routes
+
+
+// Send Verification OTP to user's email function
+export const sendVerifyOtp = async(req,res) =>{
+    try{
+        // We will get the userId from token.
+        const {userId} = req.body;
+        const user = await userModel.findById(userId);
+
+        // Check if the user's account is already verified
+        if(user.isAccountVerified)
+        {
+            // If isAccountVerified === true, that means the user has already verified their account
+            return res.json({success:false,message:"Account already verified."})
+        }
+        // If the code reaches here, that means isAccountVerified === false
+        // So we can proceed to generate and send a new OTP for email verification
+
+        const otp = String(Math.floor(100000 + Math.random()*900000))
+        user.verifyOTP = otp;
+        user.verifyOTPExpireAt = Date.now() + 24 * 60 * 60 * 1000
+        await user.save();
+
+        const mailOptions = {
+            from:process.env.SENDER_EMAIL,
+            to:user.email,
+            subject:'Account Verification OTP',
+            text:`Your OTP is ${otp}. Verify your account using this OTP.`,
+        }
+        await transporter.sendMail(mailOptions);
+
+
+        res.json({success:true,message:'Verification OTP sent on Mail.'});
+    }
+    catch(error){
+        res.json({success:false,message:error.message});
+    }
+}
+
+
+// Check if the user typed the correct OTP for verification
+export const verifyEmail = async (req,res)=>{
+    const {userId, otp} = req.body;
+    
+    if(!userId || !otp)
+    {
+        return res.json({success:false,message:"Missing Details."});      
+    }
+    
+    try {
+        
+        const user = await userModel.findById(userId);
+        // if user not found
+        if(!user)
+        {
+            return res.json({success:false,message:"User not found."});      
+        }
+
+        // if user's verify otp is empty or not equal to otp send to the user.
+        if(!user.verifyOTP || user.verifyOTP !== String(otp))
+        {
+            return res.json({success:false,message:"Invalid OTP."});      
+        }
+
+        // if otp is expired
+        if(user.verifyOTPExpireAt < Date.now()){
+            return res.json({success:false,message:"OTP is expired."});      
+        }
+
+        // If otp is correct and not expired then verify user account
+        user.isAccountVerified = true;
+
+
+        // Reseting verification otp and it's expire date.
+        user.verifyOTP = '';
+        user.verifyOTPExpireAt = 0;
+        
+        await user.save();
+
+        return res.json({success:true,message:"Email verified Successfully."});
+    } 
+    catch (error) 
+    {
+        return res.json({success:false,message:error.message});
+    }
+};
+
+// We will get the userId from token and token is stored in the cookies so we need a middleware that will get the cookie and from that cookie we will get
+// token and from that token we will find the userID and then we will add in req.body.
+// For this create a new folder middleware
