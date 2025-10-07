@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, logout, register, sendVerifyOtp, verifyEmail } from '../controllers/authController.js';
+import { isAuthenticated, login, logout, register, resetPassword, sendResetOtp, sendVerifyOtp, verifyEmail } from '../controllers/authController.js';
 import userAuth from '../middleware/userAuth.js';
 
 const authRouter = express.Router();
@@ -17,7 +17,20 @@ authRouter.post('/send-verify-otp',userAuth, sendVerifyOtp);
 // HEre due to next() the data will be send to sendVerifyOtp
 authRouter.post('/verify-account',userAuth, verifyEmail);
 
+// Adding another isAuthenticated route
+authRouter.post('/is-auth',userAuth, isAuthenticated);
+
+// Adding reset password route
+authRouter.post('/send-reset-otp',sendResetOtp);
+authRouter.post('/reset-password',resetPassword);
+
+
 export default authRouter;
 // Now go to server.js file and import it
 
 // After adding verification routes Now test the new routes in postman 
+// Now add a new function call isauthenticated in authController.js file
+// Now go to authController.js
+
+// Now check reset password route in postman
+// Now create a new file in controller folder name as userController.js

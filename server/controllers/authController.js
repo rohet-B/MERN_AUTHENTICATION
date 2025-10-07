@@ -1,3 +1,5 @@
+// This file is for handling user's authentication related operation
+
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken'; // to generate a token for authentication
 import userModel from '../models/userModel.js';
@@ -201,3 +203,93 @@ export const verifyEmail = async (req,res)=>{
 // We will get the userId from token and token is stored in the cookies so we need a middleware that will get the cookie and from that cookie we will get
 // token and from that token we will find the userID and then we will add in req.body.
 // For this create a new folder middleware
+
+
+// check if user is Authenticated 
+// isAuthenticated simply checks if a user is logged in or not. When you call it, it looks for a login token in the browser’s cookies. If the token is valid, it means the user is still logged in and sends back { success: true }. If the token is missing or expired, it means the user is logged out.
+export const isAuthenticated = async (req,res)=>{
+    try {
+        return res.json({success:true});
+    } catch (error) {
+        res.json({success:false,message:error.message});
+    }
+}
+
+// GO to authroutes.js
+
+// Send Password reset OTP
+export const sendResetOtp = async (req,res)=>{
+    const {email} = req.body;
+    if(!email){
+        return res.json({success:false,message:"Email is required."});
+    }
+
+    try {
+        const user = await userModel.findOne({email});
+
+        if(!user)
+        {
+            return res.json({success:false,message:"User not found"});
+        }
+
+        const otp = String(Math.floor(100000 + Math.random()*900000))
+        user.resetOTP = otp;
+        user.resetOTPExpireAt = Date.now() + 15 * 60 * 1000
+        await user.save();
+
+        const mailOptions = {
+            from:process.env.SENDER_EMAIL,
+            to:user.email,
+            subejct:"Password Reset OTP",
+            text:`Your OTP for resetting your password is ${otp}`,
+        }
+
+        await transporter.sendMail(mailOptions);
+
+        return res.json({success:true,message:"OTP sent to your email."});
+
+    } catch (error) {
+        return res.json({success:false,message:error.message});
+    }
+}
+
+// Reset User password
+export const resetPassword = async (req,res) =>{
+    const {email,otp,newPassword} = req.body;
+
+    if(!email || !otp || !newPassword)
+    {
+        return res.json({success:false,message:"Email, OTP and new password are required."});
+    }
+
+    try {
+        const user = await userModel.findOne({email});
+        if(!user)
+        {
+            return res.json({success:false,message:"User not found."});
+
+        }
+
+        if(user.resetOTP === '' || user.resetOTP !== otp)
+        {
+            return res.json({success:false,message:"Invalid OTP"});
+        }
+
+        if(user.resetOTPExpireAt < Date.now())
+        {
+            return res.json({success:false,message:"OTP is expired."});
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword,10);
+        user.password = hashedPassword;
+        user.resetOTP = '';
+        user.resetOTPExpireAt = 0;
+        user.save();
+
+        return res.json({success:true,message:'Password has been reset successfully.'});
+
+    } catch (error) {
+        return res.json({success:false,message:error.message});
+    }
+}
+// Now add this new route to authRoutes.js

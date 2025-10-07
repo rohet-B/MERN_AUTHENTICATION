@@ -28,6 +28,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/mongodb.js";
 
 import authRouter from './routes/authRoutes.js'
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -45,9 +46,11 @@ app.get("/",(req,res)=>{
 
 app.use('/api/auth',authRouter)
 
+app.use('/api/user',userRouter)
+
 app.listen(port,()=>{
     console.log(`App is running on server ${port}.`)
-});
+})
 
 // In package.json
     // under scripts:{
@@ -75,3 +78,6 @@ app.listen(port,()=>{
 
 
 // Go to config and and create nodemailer.js file once all done, test register route again to check whether you receive email or not.
+
+// Just added a new route api/user
+// Test it in postman and now work on frontend using react

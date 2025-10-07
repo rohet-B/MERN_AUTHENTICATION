@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+*{
+    font-family: 'Outfit",sans-serif';
+}
+
+@import "tailwindcss";
+
+/* Now install taliwindcss here */
+/* npm install tailwindcss @tailwindcss/vite */
+
+/* import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+  ],
+}) */
