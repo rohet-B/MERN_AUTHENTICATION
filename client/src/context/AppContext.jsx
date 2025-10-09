@@ -1,4 +1,6 @@
 import { createContext, useState } from "react";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 // Create a new context object that can be used to share data across components
 export const AppContent = createContext();
@@ -11,14 +13,25 @@ export const AppContextProvider = (props) =>{
 
     //  Define states that will be shared across your app
     const [isLoggedin,setIsLoggedIn] = useState(false);
-    const [userData,setUserData] = useState(false);
+    const [userData,setUserData] = useState(null);
 
-
+    const getUserData = async()=>{
+        try{
+            const {data} = await axios.get(`${backendUrl}/api/user/data`);
+            data.success ? setUserData(data.userData) : toast.error(data.message)
+        }
+        catch(error)
+        {
+            toast.error(error.message)
+        }
+    }
+    
     // Bundle all shared data and functions into a single object
     const value = {
         backendUrl,
         isLoggedin,setIsLoggedIn,
-        userData,setUserData
+        userData,setUserData,
+        getUserData
     }
     
  return(

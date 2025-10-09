@@ -37,7 +37,9 @@ connectDB();
 app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({credentials:true})); // to send cookies in response
+
+const allowedOrigins = ['http://localhost:5173']
+app.use(cors({origin: allowedOrigins, credentials:true})); // to send cookies in response and to allow communication between different ports we have to give origins
 
 // API ENDPOINTs
 app.get("/",(req,res)=>{
