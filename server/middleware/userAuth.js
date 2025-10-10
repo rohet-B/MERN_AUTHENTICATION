@@ -13,16 +13,15 @@ try {
     // if token decode has ._id then add this id to req.body
     if(tokenDecode.id)
     {
-        // Ensure req.body exists (only for POST/PUT requests)
-        if(req.body)
-        {
-            req.body.userId = tokenDecode.id;
-        }
-        // Don’t put userId in req.body because GET requests don’t have a body        
-        // Instead, we store the user ID in req.user (works for GET, POST, PUT, DELETE).
-        else{
-            req.user = { id: tokenDecode.id };
-        }
+        // Make sure req.body exists
+        req.body = req.body || {};
+
+        // Assign userId for POST/PUT routes
+        req.body.userId = tokenDecode.id;
+        
+        // Assign req.user.id for all routes (GET/POST/PUT)
+        req.user = { id: tokenDecode.id };
+        
         // In short:
         // req.user.id → works for all routes.
         // req.body.userID → only available for POST/PUT, optional.

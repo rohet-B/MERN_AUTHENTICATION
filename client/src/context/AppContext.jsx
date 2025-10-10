@@ -1,6 +1,9 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
+
+// ✅ Allow cookies and sessions in all requests
+axios.defaults.withCredentials = true;
 
 // Create a new context object that can be used to share data across components
 export const AppContent = createContext();
@@ -25,7 +28,25 @@ export const AppContextProvider = (props) =>{
             toast.error(error.message)
         }
     }
+
+    const getAuthState = async()=>{
+        try {
+            const {data} = await axios.get(`${backendUrl}/api/auth/is-auth`)
+            if(data.success)
+            {
+                setIsLoggedIn(true);
+                getUserData()
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
     
+    // Whenever we load or refresh the page it will check for authstatus and get user detail
+    useEffect(()=>{
+        getAuthState();
+    },[])
+
     // Bundle all shared data and functions into a single object
     const value = {
         backendUrl,
