@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken'; // to generate a token for authentication
 import userModel from '../models/userModel.js';
 import transporter from '../config/nodemailer.js';
+import { EMAIL_VERIFY_TEMPLATE,PASSWORD_RESET_TEMPLATE } from '../config/emailTemplate.js';
 
 // user registration function
 export const register = async (req,res) =>{
@@ -140,7 +141,8 @@ export const sendVerifyOtp = async(req,res) =>{
             from:process.env.SENDER_EMAIL,
             to:user.email,
             subject:'Account Verification OTP',
-            text:`Your OTP is ${otp}. Verify your account using this OTP.`,
+            // text:`Your OTP is ${otp}. Verify your account using this OTP.`,
+            html:EMAIL_VERIFY_TEMPLATE.replace("{{otp}}",otp).replace("{{email}}",user.email)
         }
         await transporter.sendMail(mailOptions);
 
@@ -240,8 +242,9 @@ export const sendResetOtp = async (req,res)=>{
         const mailOptions = {
             from:process.env.SENDER_EMAIL,
             to:user.email,
-            subejct:"Password Reset OTP",
-            text:`Your OTP for resetting your password is ${otp}`,
+            subject:"Password Reset OTP",
+            // text:`Your OTP for resetting your password is ${otp}`,
+            html:PASSWORD_RESET_TEMPLATE.replace("{{otp}}",otp).replace("{{email}}",user.email)
         }
 
         await transporter.sendMail(mailOptions);
@@ -255,9 +258,9 @@ export const sendResetOtp = async (req,res)=>{
 
 // Reset User password
 export const resetPassword = async (req,res) =>{
-    const {email,otp,newPassword} = req.body;
+    const {email,otp,newpassword} = req.body;
 
-    if(!email || !otp || !newPassword)
+    if(!email || !otp || !newpassword)
     {
         return res.json({success:false,message:"Email, OTP and new password are required."});
     }
@@ -280,7 +283,7 @@ export const resetPassword = async (req,res) =>{
             return res.json({success:false,message:"OTP is expired."});
         }
 
-        const hashedPassword = await bcrypt.hash(newPassword,10);
+        const hashedPassword = await bcrypt.hash(newpassword,10);
         user.password = hashedPassword;
         user.resetOTP = '';
         user.resetOTPExpireAt = 0;
