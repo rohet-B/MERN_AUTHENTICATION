@@ -38,21 +38,8 @@ app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const allowedOrigins = [
-   'http://localhost:5173', 
-  'https://mern-authentication-client-jp9m.onrender.com'
-  ]
-app.use(cors({
-  origin: function(origin, callback) {
-    if(!origin) return callback(null, true); // allow Postman or server-to-server requests
-    if(allowedOrigins.indexOf(origin) === -1){
-      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
+const allowedOrigins = ['http://localhost:5173']
+app.use(cors({origin: allowedOrigins, credentials:true})); // to send cookies in response and to allow communication between different ports we have to give origins
 
 // API ENDPOINTs
 app.get("/",(req,res)=>{
